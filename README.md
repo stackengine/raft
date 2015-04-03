@@ -1,4 +1,6 @@
-raft [![Build Status](https://travis-ci.org/hashicorp/raft.png)](https://travis-ci.org/hashicorp/raft)
+WARNING: This is a forked version of hashicorp/raft.
+
+raft 
 ====
 
 raft is a [Go](http://www.golang.org) library that manages a replicated
