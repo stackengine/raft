@@ -78,24 +78,41 @@ type Raft struct {
 	// Configuration provided at Raft initialization
 	conf *Config
 
-	fsm           FSM                     // FSM is the client state machine to apply commands to
-	fsmCommitCh   chan commitTuple        // fsmCommitCh is used to trigger async application of logs to the fsm
-	fsmRestoreCh  chan *restoreFuture     // fsmRestoreCh is used to trigger a restore from snapshot
-	fsmSnapshotCh chan *reqSnapshotFuture // fsmSnapshotCh is used to trigger a new snapshot being taken
+	// FSM is the client state machine to apply commands to
+	fsm FSM
+
+	// fsmCommitCh is used to trigger async application of logs to the fsm
+	fsmCommitCh chan commitTuple
+
+	// fsmRestoreCh is used to trigger a restore from snapshot
+	fsmRestoreCh chan *restoreFuture
+
+	// fsmSnapshotCh is used to trigger a new snapshot being taken
+	fsmSnapshotCh chan *reqSnapshotFuture
 
 	// lastContact is the last time we had contact from the
 	// leader node. This can be used to guage staleness.
 	lastContact     time.Time
 	lastContactLock sync.RWMutex
 
-	leaderLock  sync.RWMutex
-	leader      net.Addr    // Leader is the current cluster leader
-	leaderCh    chan bool   // leaderCh is used to notify of leadership changes
-	leaderState leaderState // leaderState used only while state is leader
+	// Leader is the current cluster leader
+	leader     net.Addr
+	leaderLock sync.RWMutex
 
-	localAddr net.Addr   // Stores our local addr
-	logger    *selog.Log // Used for our logging
-	logs      LogStore   // LogStore provides durable storage for logs
+	// leaderCh is used to notify of leadership changes
+	leaderCh chan bool
+
+	// leaderState used only while state is leader
+	leaderState leaderState
+
+	// Stores our local addr
+	localAddr net.Addr
+
+	// Used for our logging
+	logger *selog.Log
+
+	// LogStore provides durable storage for logs
+	logs LogStore
 
 	mutex sync.RWMutex
 	// Track our known peers
@@ -111,8 +128,11 @@ type Raft struct {
 	shutdownCh   chan struct{}
 	shutdownLock sync.Mutex
 
-	snapshots  SnapshotStore        // snapshots is used to store and retrieve snapshots
-	snapshotCh chan *snapshotFuture // snapshotCh is used for user triggered snapshots
+	// snapshots is used to store and retrieve snapshots
+	snapshots SnapshotStore
+
+	// snapshotCh is used for user triggered snapshots
+	snapshotCh chan *snapshotFuture
 
 	// stable is a StableStore implementation for durable state
 	// It provides stable storage for many fields in raftState
@@ -202,6 +222,11 @@ func NewRaft(conf *Config, fsm FSM, logs LogStore, stable StableStore, snaps Sna
 	if err := r.restoreSnapshot(); err != nil {
 		return nil, err
 	}
+
+	// Setup a heartbeat fast-path to avoid head-of-line
+	// blocking where possible. It MUST be safe for this
+	// to be called concurrently with a blocking RPC.
+	trans.SetHeartbeatHandler(r.processHeartbeat)
 
 	// Start the background work
 	r.goFunc(r.run)
@@ -1146,6 +1171,7 @@ func (r *Raft) processLog(l *Log, future *logFuture, precommit bool) {
 
 					// Replicate up to this index and stop
 					repl.stopCh <- l.Index
+					close(repl.stopCh)
 					toDelete = append(toDelete, repl.peer.String())
 				}
 			}
@@ -1188,6 +1214,26 @@ func (r *Raft) processRPC(rpc RPC) {
 		r.installSnapshot(rpc, cmd)
 	default:
 		r.logger.ErrPrintf("raft: Got unexpected command: %#v", rpc.Command)
+		rpc.Respond(nil, fmt.Errorf("unexpected command"))
+	}
+}
+
+// processHeartbeat is a special handler used just for heartbeat requests
+// so that they can be fast-pathed if a transport supports it
+func (r *Raft) processHeartbeat(rpc RPC) {
+	// Check if we are shutdown, just ignore the RPC
+	select {
+	case <-r.shutdownCh:
+		return
+	default:
+	}
+
+	// Ensure we are only handling a heartbeat
+	switch cmd := rpc.Command.(type) {
+	case *AppendEntriesRequest:
+		r.appendEntries(rpc, cmd)
+	default:
+		r.logger.Printf("[ERR] raft: Expected heartbeat, got command: %#v", rpc.Command)
 		rpc.Respond(nil, fmt.Errorf("unexpected command"))
 	}
 }

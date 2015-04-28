@@ -48,4 +48,10 @@ type Transport interface {
 
 	// DecodePeer is used to deserialize a peer name
 	DecodePeer([]byte) net.Addr
+
+	// SetHeartbeatHandler is used to setup a heartbeat handler
+	// as a fast-pass. This is to avoid head-of-line blocking from
+	// disk IO. If a Transport does not support this, it can simply
+	// ignore the call, and push the heartbeat onto the Consumer channel.
+	SetHeartbeatHandler(cb func(rpc RPC))
 }
