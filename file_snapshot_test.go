@@ -2,21 +2,21 @@ package raft
 
 import (
 	"bytes"
-	"github.com/stackengine/selog"
 	"io"
 	"io/ioutil"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/Sirupsen/logrus"
 )
 
 var (
-	SeLog *selog.Log
+	SeLog Logger
 )
 
-func TestFileSetup(t *testing.T) {
-	SeLog = selog.Register("mesh", 0)
-	SeLog.Enable()
+func init() {
+	SeLog = logs{logrus.New()}
 }
 
 func FileSnapTest(t *testing.T) (string, *FileSnapshotStore) {

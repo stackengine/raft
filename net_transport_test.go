@@ -2,17 +2,11 @@ package raft
 
 import (
 	"bytes"
-	"github.com/stackengine/selog"
 	"reflect"
 	"sync"
 	"testing"
 	"time"
 )
-
-func TestNetSetup(t *testing.T) {
-	SeLog = selog.Register("raft", 0)
-	SeLog.Enable()
-}
 
 func TestNetworkTransport_StartStop(t *testing.T) {
 	trans, err := NewTCPTransport("127.0.0.1:0", nil, 2, time.Second, SeLog)

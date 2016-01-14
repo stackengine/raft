@@ -78,3 +78,16 @@ type LogStore interface {
 	// Deletes a range of log entries. The range is inclusive.
 	DeleteRange(min, max uint64) error
 }
+
+type Logger interface {
+	Enable()
+	Disable()
+
+	Printf(format string, v ...interface{})
+	Println(v ...interface{})
+
+	ErrPrintf(format string, v ...interface{})
+
+	InfoPrintf(format string, v ...interface{})
+	InfoPrintln(v ...interface{})
+}

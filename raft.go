@@ -10,8 +10,6 @@ import (
 	"strconv"
 	"sync"
 	"time"
-
-	"github.com/stackengine/selog"
 )
 
 const (
@@ -109,7 +107,7 @@ type Raft struct {
 	localAddr net.Addr
 
 	// Used for our logging
-	logger *selog.Log
+	logger Logger
 
 	// LogStore provides durable storage for logs
 	logs LogStore
@@ -151,7 +149,7 @@ type Raft struct {
 // such as snapshots, logs, peers, etc, all those will be restored when creating the
 // Raft node.
 func NewRaft(conf *Config, fsm FSM, logs LogStore, stable StableStore, snaps SnapshotStore,
-	peerStore PeerStore, trans Transport, selog *selog.Log) (*Raft, error) {
+	peerStore PeerStore, trans Transport, selog Logger) (*Raft, error) {
 
 	// Validate the configuration
 	if err := ValidateConfig(conf); err != nil {

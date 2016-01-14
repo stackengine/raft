@@ -2,7 +2,6 @@ package raft
 
 import (
 	"errors"
-	"github.com/stackengine/selog"
 	"net"
 	"time"
 )
@@ -25,7 +24,7 @@ func NewTCPTransport(
 	advertise net.Addr,
 	maxPool int,
 	timeout time.Duration,
-	selog *selog.Log,
+	selog Logger,
 ) (*NetworkTransport, error) {
 	// Try to bind
 	list, err := net.Listen("tcp", bindAddr)

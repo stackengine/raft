@@ -14,8 +14,6 @@ import (
 	"sort"
 	"strings"
 	"time"
-
-	"github.com/stackengine/selog"
 )
 
 const (
@@ -31,7 +29,7 @@ const (
 type FileSnapshotStore struct {
 	path   string
 	retain int
-	logger *selog.Log
+	logger Logger
 }
 
 type snapMetaSlice []*fileSnapshotMeta
@@ -39,7 +37,7 @@ type snapMetaSlice []*fileSnapshotMeta
 // FileSnapshotSink implements SnapshotSink with a file.
 type FileSnapshotSink struct {
 	store  *FileSnapshotStore
-	logger *selog.Log
+	logger Logger
 	dir    string
 	meta   fileSnapshotMeta
 
@@ -75,7 +73,7 @@ func (b *bufferedFile) Close() error {
 // NewFileSnapshotStore creates a new FileSnapshotStore based
 // on a base directory. The `retain` parameter controls how many
 // snapshots are retained. Must be at least 1.
-func NewFileSnapshotStore(base string, retain int, slog *selog.Log) (*FileSnapshotStore, error) {
+func NewFileSnapshotStore(base string, retain int, slog Logger) (*FileSnapshotStore, error) {
 	if retain < 1 {
 		return nil, fmt.Errorf("must retain at least one snapshot")
 	}

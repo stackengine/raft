@@ -12,14 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stackengine/selog"
 	"github.com/ugorji/go/codec"
 )
-
-func init() {
-	SeLog = selog.Register("raft", 0)
-	SeLog.Enable()
-}
 
 // MockFSM is an implementation of the FSM interface, and just stores
 // the logs sequentially
