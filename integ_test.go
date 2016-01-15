@@ -8,14 +8,7 @@ import (
 	"os"
 	"testing"
 	"time"
-
-	"github.com/stackengine/selog"
 )
-
-func TestIntegSetup(t *testing.T) {
-	SeLog = selog.Register("raft", 0)
-	SeLog.Enable()
-}
 
 // CheckInteg will skip a test if integration testing is not enabled.
 func CheckInteg(t *testing.T) {

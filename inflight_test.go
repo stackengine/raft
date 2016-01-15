@@ -2,14 +2,8 @@ package raft
 
 import (
 	"fmt"
-	"github.com/stackengine/selog"
 	"testing"
 )
-
-func TestInFSetup(t *testing.T) {
-	SeLog = selog.Register("raft", 0)
-	SeLog.Enable()
-}
 
 func TestInflight_StartCommit(t *testing.T) {
 	commitCh := make(chan struct{}, 1)

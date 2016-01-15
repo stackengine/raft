@@ -1,17 +1,11 @@
 package raft
 
 import (
-	"github.com/stackengine/selog"
 	"io/ioutil"
 	"net"
 	"os"
 	"testing"
 )
-
-func TestPeerSetup(t *testing.T) {
-	SeLog = selog.Register("raft", 0)
-	SeLog.Enable()
-}
 
 func TestJSONPeers(t *testing.T) {
 	// Create a test dir

@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/stackengine/selog"
 	"github.com/ugorji/go/codec"
 )
 
@@ -56,7 +55,7 @@ type NetworkTransport struct {
 	heartbeatFn     func(RPC)
 	heartbeatFnLock sync.Mutex
 
-	logger *selog.Log
+	logger Logger
 
 	maxPool int
 
@@ -100,7 +99,7 @@ func NewNetworkTransport(
 	stream StreamLayer,
 	maxPool int,
 	timeout time.Duration,
-	selog *selog.Log,
+	selog Logger,
 ) *NetworkTransport {
 	trans := &NetworkTransport{
 		connPool:     make(map[string][]*netConn),
