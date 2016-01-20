@@ -17,14 +17,14 @@ func (a logs) Println(v ...interface{}) {
 	a.Logger.Println(v...)
 }
 
-func (a logs) ErrPrintf(format string, v ...interface{}) {
+func (a logs) Errorf(format string, v ...interface{}) {
 	a.Logger.Errorf(format, v...)
 }
 
-func (a logs) InfoPrintf(format string, v ...interface{}) {
+func (a logs) Infof(format string, v ...interface{}) {
 	a.Logger.Infof(format, v...)
 }
 
-func (a logs) InfoPrintln(v ...interface{}) {
+func (a logs) Infoln(v ...interface{}) {
 	a.Logger.Infoln(v...)
 }

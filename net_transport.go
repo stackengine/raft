@@ -311,7 +311,7 @@ func (n *NetworkTransport) listen() {
 			if n.IsShutdown() {
 				return
 			}
-			n.logger.ErrPrintf("raft-net: Failed to accept connection: %v", err)
+			n.logger.Errorf("raft-net: Failed to accept connection: %v", err)
 			continue
 		}
 		n.logger.Printf("raft-net: %v accepted connection from: %v", n.LocalAddr(), conn.RemoteAddr())
@@ -332,12 +332,12 @@ func (n *NetworkTransport) handleConn(conn net.Conn) {
 	for {
 		if err := n.handleCommand(r, dec, enc); err != nil {
 			if err != io.EOF {
-				n.logger.ErrPrintf("raft-net: Failed to decode incoming command: %v", err)
+				n.logger.Errorf("raft-net: Failed to decode incoming command: %v", err)
 			}
 			return
 		}
 		if err := w.Flush(); err != nil {
-			n.logger.ErrPrintf("raft-net: Failed to flush response: %v", err)
+			n.logger.Errorf("raft-net: Failed to flush response: %v", err)
 			return
 		}
 	}

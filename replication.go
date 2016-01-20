@@ -137,7 +137,7 @@ START:
 			if err == ErrLogNotFound {
 				goto SEND_SNAP
 			}
-			r.logger.ErrPrintf("raft: Failed to get log at index %d: %v",
+			r.logger.Errorf("raft: Failed to get log at index %d: %v",
 				s.nextIndex-1, err)
 			return
 		}
@@ -156,7 +156,7 @@ START:
 			if err == ErrLogNotFound {
 				goto SEND_SNAP
 			}
-			r.logger.ErrPrintf("raft: Failed to get log at index %d: %v", i, err)
+			r.logger.Errorf("raft: Failed to get log at index %d: %v", i, err)
 			return
 		}
 		req.Entries = append(req.Entries, oldLog)
@@ -164,14 +164,14 @@ START:
 
 	// Make the RPC call
 	if err := r.trans.AppendEntries(s.peer, &req, &resp); err != nil {
-		r.logger.ErrPrintf("raft: Failed to AppendEntries to %v: %v", s.peer, err)
+		r.logger.Errorf("raft: Failed to AppendEntries to %v: %v", s.peer, err)
 		s.failures++
 		return
 	}
 
 	// Check for a newer term, stop running
 	if resp.Term > req.Term {
-		r.logger.ErrPrintf("raft: peer %v has newer term, stopping replication", s.peer)
+		r.logger.Errorf("raft: peer %v has newer term, stopping replication", s.peer)
 		s.notifyAll(false) // No longer leader
 		asyncNotifyCh(s.stepDown)
 		return true
@@ -198,7 +198,7 @@ START:
 		s.nextIndex = max(min(s.nextIndex-1, resp.LastLog+1), 1)
 		s.matchIndex = s.nextIndex - 1
 		s.failures++
-		r.logger.InfoPrintf("raft: AppendEntries to %v rejected, sending older logs (next: %d)", s.peer, s.nextIndex)
+		r.logger.Infof("raft: AppendEntries to %v rejected, sending older logs (next: %d)", s.peer, s.nextIndex)
 	}
 
 CHECK_MORE:
@@ -220,7 +220,7 @@ SEND_SNAP:
 
 	// Check for an error
 	if err != nil {
-		r.logger.ErrPrintf("raft: Failed to send snapshot to %v: %v", s.peer, err)
+		r.logger.Errorf("raft: Failed to send snapshot to %v: %v", s.peer, err)
 		return
 	}
 
@@ -234,7 +234,7 @@ func (r *Raft) sendLatestSnapshot(s *followerReplication) (bool, error) {
 	// Get the snapshots
 	snapshots, err := r.snapshots.List()
 	if err != nil {
-		r.logger.ErrPrintf("raft: Failed to list snapshots: %v", err)
+		r.logger.Errorf("raft: Failed to list snapshots: %v", err)
 		return false, err
 	}
 
@@ -247,7 +247,7 @@ func (r *Raft) sendLatestSnapshot(s *followerReplication) (bool, error) {
 	snapID := snapshots[0].ID
 	meta, snapshot, err := r.snapshots.Open(snapID)
 	if err != nil {
-		r.logger.ErrPrintf("raft: Failed to open snapshot %v: %v", snapID, err)
+		r.logger.Errorf("raft: Failed to open snapshot %v: %v", snapID, err)
 		return false, err
 	}
 	defer snapshot.Close()
@@ -267,14 +267,14 @@ func (r *Raft) sendLatestSnapshot(s *followerReplication) (bool, error) {
 
 	r.logger.Printf("************** sending snapshot : %v to %s ", snapID, s.peer)
 	if err := r.trans.InstallSnapshot(s.peer, &req, &resp, snapshot); err != nil {
-		r.logger.ErrPrintf("raft: Failed to install snapshot %v: %v", snapID, err)
+		r.logger.Errorf("raft: Failed to install snapshot %v: %v", snapID, err)
 		s.failures++
 		return false, err
 	}
 
 	// Check for a newer term, stop running
 	if resp.Term > req.Term {
-		r.logger.ErrPrintf("raft: peer %v has newer term, stopping replication", s.peer)
+		r.logger.Errorf("raft: peer %v has newer term, stopping replication", s.peer)
 		s.notifyAll(false) // No longer leader
 		asyncNotifyCh(s.stepDown)
 		return true, nil
@@ -299,7 +299,7 @@ func (r *Raft) sendLatestSnapshot(s *followerReplication) (bool, error) {
 		s.notifyAll(true)
 	} else {
 		s.failures++
-		r.logger.InfoPrintf("raft: InstallSnapshot to %v rejected", s.peer)
+		r.logger.Infof("raft: InstallSnapshot to %v rejected", s.peer)
 	}
 	return false, nil
 }
@@ -324,7 +324,7 @@ func (r *Raft) heartbeat(s *followerReplication, stopCh chan struct{}) {
 		}
 
 		if err := r.trans.AppendEntries(s.peer, &req, &resp); err != nil {
-			r.logger.ErrPrintf("raft: Failed to heartbeat to %v: %v", s.peer, err)
+			r.logger.Errorf("raft: Failed to heartbeat to %v: %v", s.peer, err)
 			failures++
 			select {
 			case <-time.After(backoff(failureWait, failures, maxFailureScale)):

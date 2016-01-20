@@ -86,8 +86,8 @@ type Logger interface {
 	Printf(format string, v ...interface{})
 	Println(v ...interface{})
 
-	ErrPrintf(format string, v ...interface{})
+	Errorf(format string, v ...interface{})
 
-	InfoPrintf(format string, v ...interface{})
-	InfoPrintln(v ...interface{})
+	Infof(format string, v ...interface{})
+	Infoln(v ...interface{})
 }
